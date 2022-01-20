@@ -1,8 +1,12 @@
 package com.nantoine.xmppclient
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -10,16 +14,15 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import com.nantoine.xmppclient.ui.theme.XMPPClientTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.intellij.lang.annotations.JdkConstants
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : ComponentActivity() {
@@ -80,22 +84,25 @@ fun Home() {
   )
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @ExperimentalFoundationApi
 @Composable
 fun HomeContent() {
-  var numbers: List<Int> = emptyList()
-
-  for (i in 0..50) {
-    numbers += i
+  // Here, we need to remember the value of numbers, otherwise, it will recalculate the numbers
+  // the whole time we're scrolling
+  val numbers by remember {
+    mutableStateOf(generateNumbers())
   }
+  // These two lines yield way lower performance
+//  val numbers = remember { generateNumbers() }
+//  val numbers = generateNumbers()
+  val listState = rememberLazyListState()
+  val scope = rememberCoroutineScope()
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize(),
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    LazyColumn() {
+  Box() {
+    LazyColumn(state = listState) {
       val grouped = numbers.groupBy { it.toString()[0] }
+
       grouped.forEach { (initial, groupedNumbers) ->
         stickyHeader {
           Column(
@@ -118,7 +125,34 @@ fun HomeContent() {
         }
       }
     }
+    val showButton = listState.firstVisibleItemIndex > 0
+
+    AnimatedVisibility(
+      visible = showButton,
+      enter = fadeIn(),
+      exit = fadeOut(),
+      modifier = Modifier.align(Alignment.BottomCenter)
+    ) {
+      FloatingActionButton(onClick = {
+        scope.launch {
+          listState.scrollToItem(0)
+        }
+      }) {
+        Icon(imageVector = Icons.Filled.KeyboardArrowUp, contentDescription = null)
+      }
+
+    }
   }
+
+}
+
+fun generateNumbers(): List<Int> {
+  var numbers: List<Int> = emptyList()
+
+  for (i in 0..50) {
+    numbers += i
+  }
+  return numbers
 }
 
 @ExperimentalMaterial3Api

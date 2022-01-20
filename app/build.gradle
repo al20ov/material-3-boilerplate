@@ -4,6 +4,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storePassword 'luckystrike1107'
+            keyAlias 'key0'
+            keyPassword 'luckystrike1107'
+            storeFile file('/home/nico/Android/keystore/key.jks')
+        }
+    }
     compileSdk 31
 
     defaultConfig {
@@ -21,8 +29,13 @@ android {
 
     buildTypes {
         release {
+            renderscriptDebuggable true
+        }
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
@@ -48,6 +61,8 @@ android {
 }
 
 dependencies {
+    implementation 'org.igniterealtime.smack:smack-android:4.4.0'
+    implementation 'org.igniterealtime.smack:smack-tcp:4.4.0'
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
@@ -65,4 +80,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+}
+
+configurations {
+    all*.exclude group: 'xpp3', module: 'xpp3'
 }
